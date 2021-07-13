@@ -1,0 +1,6 @@
+
+.vscode/
+
+build/.cmake/api/v1/query/client-vscode/
+
+build/
