@@ -4,7 +4,8 @@
 #include <string>
 
 const char *processName = "notepad.exe";
-const char *targetFunc = "CloseHandle";
+const char *targetDll = "ntdll.dll";
+const char *targetFunc = "NtCreateFile";
 
 int main()
 {
@@ -42,10 +43,8 @@ int main()
     }
 
     HMODULE hModule;
-    BOOL err = GetModuleHandleEx(0, 0, &hModule);
+    BOOL err = GetModuleHandleEx(0, "KERNEL32.dll", &hModule);
     std::cout << "[+] module handle: 0x" << std::hex << hModule << std::endl;
-    //FARPROC a = GetProcAddress(hModule, "NtCreateFile");
-    //std::cout << a << std::endl;
 
     PIMAGE_DOS_HEADER pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
     DWORD dosBase = reinterpret_cast<DWORD>(pDosHeader);
@@ -56,7 +55,7 @@ int main()
     for (; pImportDescriptor->Name != NULL; ++pImportDescriptor)
     {
         char *dllName = reinterpret_cast<char *>(dosBase + pImportDescriptor->Name);
-        if (strcmp(dllName, "KERNEL32.dll"))
+        if (strcmp(dllName, targetDll))
         {
             continue;
         }
