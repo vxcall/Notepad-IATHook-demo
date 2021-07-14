@@ -3,8 +3,8 @@
 #include <TlHelp32.h>
 #include <string>
 
-const std::string processName = "notepad.exe";
-const std::string targetFunc = "CloseHandle";
+const char *processName = "notepad.exe";
+const char *targetFunc = "CloseHandle";
 
 int main()
 {
@@ -22,7 +22,7 @@ int main()
     BOOL bRet = Process32First(hSnap, &PE32);
     while (bRet)
     {
-        if (!strcmp(processName.c_str(), PE32.szExeFile))
+        if (!strcmp(processName, PE32.szExeFile))
         {
             PID = PE32.th32ProcessID;
             std::cout << "[+] PID copied: " << PID << std::endl;
@@ -44,6 +44,8 @@ int main()
     HMODULE hModule;
     BOOL err = GetModuleHandleEx(0, 0, &hModule);
     std::cout << "[+] module handle: 0x" << std::hex << hModule << std::endl;
+    //FARPROC a = GetProcAddress(hModule, "NtCreateFile");
+    //std::cout << a << std::endl;
 
     PIMAGE_DOS_HEADER pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
     DWORD dosBase = reinterpret_cast<DWORD>(pDosHeader);
@@ -51,18 +53,21 @@ int main()
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
     PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(dosBase + pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
-    //for (int i = 0; reinterpret_cast<char *>(dosBase + (pImportDescriptor + i)->Name) != NULL; ++i)
-    //{
-    //char *dllName = reinterpret_cast<char *>(dosBase + (pImportDescriptor + i)->Name);
-    //std::cout << dllName << std::endl;
-    //}
-
-    DWORD *ILTBase = reinterpret_cast<DWORD *>(dosBase + pImportDescriptor->OriginalFirstThunk); //Import lookup table pointer is somewhere on the memory and OriginalFirstThunk tells you the relative location.
-
-    for (int i = 0; *(ILTBase + i) != NULL; ++i)
+    for (; pImportDescriptor->Name != NULL; ++pImportDescriptor)
     {
-        PIMAGE_IMPORT_BY_NAME dllInfo = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(dosBase + *(ILTBase + i));
-        std::string name(dllInfo->Name);
-        std::cout << name << std::endl;
+        char *dllName = reinterpret_cast<char *>(dosBase + pImportDescriptor->Name);
+        if (strcmp(dllName, "KERNEL32.dll"))
+        {
+            continue;
+        }
+        std::cout << "-------" << dllName << "-------" << std::endl;
+        DWORD *ILTBase = reinterpret_cast<DWORD *>(dosBase + pImportDescriptor->OriginalFirstThunk); //Import lookup table pointer is somewhere on the memory and OriginalFirstThunk tells you the relative location.
+
+        for (int i = 0; *(ILTBase + i) != NULL; ++i)
+        {
+            PIMAGE_IMPORT_BY_NAME dllInfo = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(dosBase + *(ILTBase + i));
+            if (!strcmp(dllInfo->Name, targetFunc))
+                std::cout << dllInfo->Name << std::endl;
+        }
     }
 }
