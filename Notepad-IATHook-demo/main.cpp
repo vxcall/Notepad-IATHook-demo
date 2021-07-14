@@ -4,6 +4,7 @@
 #include <string>
 
 const std::string processName = "notepad.exe";
+const std::string targetFunc = "CloseHandle";
 
 int main()
 {
@@ -50,10 +51,18 @@ int main()
     PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
     PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(dosBase + pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
-    char *dllName = reinterpret_cast<char *>(dosBase + (pImportDescriptor)->Name);
-    std::cout << dllName << std::endl;
+    //for (int i = 0; reinterpret_cast<char *>(dosBase + (pImportDescriptor + i)->Name) != NULL; ++i)
+    //{
+    //char *dllName = reinterpret_cast<char *>(dosBase + (pImportDescriptor + i)->Name);
+    //std::cout << dllName << std::endl;
+    //}
 
-    DWORD *ILTBase = reinterpret_cast<DWORD *>(dosBase + pImportDescriptor->OriginalFirstThunk); //Import lookup table is somewhere on the memory and OriginalFirstThunk tells you the relative location.
-    PIMAGE_IMPORT_BY_NAME dllInfo = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(dosBase + *ILTBase);
-    std::cout << dllInfo->Name << std::endl;
+    DWORD *ILTBase = reinterpret_cast<DWORD *>(dosBase + pImportDescriptor->OriginalFirstThunk); //Import lookup table pointer is somewhere on the memory and OriginalFirstThunk tells you the relative location.
+
+    for (int i = 0; *(ILTBase + i) != NULL; ++i)
+    {
+        PIMAGE_IMPORT_BY_NAME dllInfo = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(dosBase + *(ILTBase + i));
+        std::string name(dllInfo->Name);
+        std::cout << name << std::endl;
+    }
 }
