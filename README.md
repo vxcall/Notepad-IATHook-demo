@@ -4,7 +4,7 @@ This is a demo of Import address table hooking tested with Notepad.
 
 I'm still working on it so it doesn't work as it finally should do.
 
-So basically this program (is being) designed to hook the function called `NtCreateFile()` imported from `ntdll.dll` to inject and perform my own code which doesn't relate to
+So basically this program (is being) designed to hook the function called `NtCreateFile()` imported from `ntdll.dll` or equivalent to inject and perform my own code which doesn't relate to
 the original functionallity.
 
 # Definition of NtCreateFile
