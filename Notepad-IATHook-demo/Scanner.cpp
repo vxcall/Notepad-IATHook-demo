@@ -26,7 +26,7 @@ auto Scanner::IsScaned(std::string &candidate) -> bool
     return false;
 }
 
-auto Scanner::FindDlls(const char *moduleName) -> void
+auto Scanner::FindTargetIATEntry(const char *moduleName) -> void
 {
     static bool found = false;
 
@@ -66,7 +66,7 @@ auto Scanner::FindDlls(const char *moduleName) -> void
                     //std::cout << dllInfo->Name << std::endl;
                 }
             }
-            FindDlls(dllName);
+            FindTargetIATEntry(dllName);
         }
     }
 }

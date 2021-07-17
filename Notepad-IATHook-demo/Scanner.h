@@ -20,5 +20,5 @@ public:
     }
     ~Scanner();
     void **targetIATEntry = nullptr;
-    auto FindDlls(const char *moduleName) -> void;
+    auto FindTargetIATEntry(const char *moduleName) -> void;
 };

@@ -2,11 +2,26 @@
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <string>
-#include <vector>
 #include "Scanner.h"
 
 const char *processName = "notepad.exe";
 const char *targetFunc = "CreateFileW";
+
+using CreateFileW_t = HANDLE(__stdcall *)(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+CreateFileW_t OriginalCreateFileW = nullptr;
+
+HANDLE __stdcall hkCreateFileW(
+    LPCWSTR lpFileName,
+    DWORD dwDesiredAccess,
+    DWORD dwShareMode,
+    LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+    DWORD dwCreationDisposition,
+    DWORD dwFlagsAndAttributes,
+    HANDLE hTemplateFile)
+{
+    MessageBox(NULL, "Function has been hooked", "RESULT", MB_OK);
+    return OriginalCreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+}
 
 auto HookIATEntry(HANDLE hProc, void *hkfunction) -> void;
 
@@ -29,7 +44,7 @@ auto main() -> int
         if (!strcmp(processName, PE32.szExeFile))
         {
             PID = PE32.th32ProcessID;
-            std::cout << "[+] PID copied: " << PID << std::endl;
+            //std::cout << "[+] PID copied: " << PID << std::endl;
             break;
         }
         bRet = Process32Next(hSnap, &PE32);
@@ -45,25 +60,28 @@ auto main() -> int
         return 0;
     }
 
-    HookIATEntry(hProc, nullptr);
+    HookIATEntry(hProc, (void *)hkCreateFileW);
     CloseHandle(hProc);
+    return 0;
 }
 
 auto HookIATEntry(HANDLE hProc, void *hkfunction) -> void
 {
     Scanner scanner(targetFunc);
-    scanner.FindDlls(0);
-    std::cout << scanner.targetIATEntry << std::endl;
+    scanner.FindTargetIATEntry(0);
 
     if (*scanner.targetIATEntry == hkfunction)
     {
+        std::cout << "same" << std::endl;
         return;
     }
 
-    DWORD oldProtect;
-    VirtualProtectEx(hProc, scanner.targetIATEntry, sizeof(LPVOID), PAGE_READWRITE, &oldProtect);
+    DWORD oldProtect, newProtect = PAGE_READWRITE;
+    VirtualProtectEx(hProc, scanner.targetIATEntry, sizeof(LPVOID), newProtect, &oldProtect);
 
+    OriginalCreateFileW = (CreateFileW_t)*scanner.targetIATEntry;
     WriteProcessMemory(hProc, *scanner.targetIATEntry, hkfunction, sizeof(hkfunction), NULL);
 
-    VirtualProtectEx(hProc, scanner.targetIATEntry, sizeof(LPVOID), oldProtect, NULL);
+    VirtualProtectEx(hProc, scanner.targetIATEntry, sizeof(LPVOID), oldProtect, &newProtect);
+    return;
 }
