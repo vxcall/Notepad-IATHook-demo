@@ -3,38 +3,14 @@
 #include <TlHelp32.h>
 #include <string>
 #include <vector>
+#include "Scanner.h"
 
 const char *processName = "notepad.exe";
-const char *targetDll = "ntdll.dll";
 const char *targetFunc = "CreateFileW";
 
-auto FindDlls(const char *moduleName) -> void;
+auto HookIATEntry(HANDLE hProc, void *hkfunction) -> void;
 
-std::vector<std::string> scanedDllName{};
-std::vector<HMODULE> moduleHandles{};
-
-auto IsScaned(std::string &candidate)
-{
-    for (auto &scaned : scanedDllName)
-    {
-        if (candidate == scaned)
-        {
-            return true;
-        }
-    }
-    scanedDllName.push_back(candidate);
-    return false;
-}
-
-auto ReleaseModuleHandles() -> void
-{
-    for (auto &hModule : moduleHandles)
-    {
-        CloseHandle(hModule);
-    }
-}
-
-int main()
+auto main() -> int
 {
     PROCESSENTRY32 PE32{0};
     PE32.dwSize = sizeof(PE32);
@@ -42,7 +18,7 @@ int main()
     HANDLE hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnap == INVALID_HANDLE_VALUE)
     {
-        printf("[-] CreateToolhelp32Snapshot failed: 0x%X\n", GetLastError);
+        printf("[-] CreateToolhelp32Snapshot failed: 0x%p\n", GetLastError);
         system("PAUSE");
         return 0;
     }
@@ -69,52 +45,25 @@ int main()
         return 0;
     }
 
-    FindDlls(0);
-    ReleaseModuleHandles();
+    HookIATEntry(hProc, nullptr);
     CloseHandle(hProc);
 }
 
-auto FindDlls(const char *moduleName) -> void
+auto HookIATEntry(HANDLE hProc, void *hkfunction) -> void
 {
-    static bool found = false;
+    Scanner scanner(targetFunc);
+    scanner.FindDlls(0);
+    std::cout << scanner.targetIATEntry << std::endl;
 
-    HMODULE hModule;
-    BOOL err = GetModuleHandleEx(0, moduleName, &hModule);
-    //std::cout << "[+] module handle: 0x" << std::hex << hModule << std::endl;
-    if (!err)
+    if (*scanner.targetIATEntry == hkfunction)
     {
-        moduleHandles.push_back(hModule);
+        return;
     }
 
-    PIMAGE_DOS_HEADER pDosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(hModule);
-    DWORD dosBase = reinterpret_cast<DWORD>(pDosHeader);
-    PIMAGE_NT_HEADERS pNtHeaders = reinterpret_cast<PIMAGE_NT_HEADERS>(dosBase + pDosHeader->e_lfanew);
-    PIMAGE_OPTIONAL_HEADER pOptionalHeader = &pNtHeaders->OptionalHeader;
-    PIMAGE_IMPORT_DESCRIPTOR pImportDescriptor = reinterpret_cast<PIMAGE_IMPORT_DESCRIPTOR>(dosBase + pOptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+    DWORD oldProtect;
+    VirtualProtectEx(hProc, scanner.targetIATEntry, sizeof(LPVOID), PAGE_READWRITE, &oldProtect);
 
-    for (; pImportDescriptor->Name != NULL; ++pImportDescriptor)
-    {
-        char *dllName = reinterpret_cast<char *>(dosBase + pImportDescriptor->Name);
+    WriteProcessMemory(hProc, *scanner.targetIATEntry, hkfunction, sizeof(hkfunction), NULL);
 
-        if (found == true)
-        {
-            return;
-        }
-        if (std::string(dllName) != "" && !IsScaned(std::string(dllName)))
-        {
-            //std::cout << dllName << std::endl;
-            DWORD *ILTBase = reinterpret_cast<DWORD *>(dosBase + pImportDescriptor->OriginalFirstThunk); //Import lookup table pointer is somewhere on the memory and OriginalFirstThunk tells you the relative location.
-
-            for (int i = 0; *(ILTBase + i) != NULL; ++i)
-            {
-                PIMAGE_IMPORT_BY_NAME dllInfo = reinterpret_cast<PIMAGE_IMPORT_BY_NAME>(dosBase + *(ILTBase + i));
-                if (!strcmp(dllInfo->Name, targetFunc))
-                {
-                    found = true;
-                    //std::cout << dllInfo->Name << std::endl;
-                }
-            }
-            FindDlls(dllName);
-        }
-    }
+    VirtualProtectEx(hProc, scanner.targetIATEntry, sizeof(LPVOID), oldProtect, NULL);
 }
