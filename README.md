@@ -4,26 +4,22 @@ This is a demo of Import address table hooking tested with Notepad.
 
 I'm still working on it so it doesn't work as it finally should do.
 
-So basically this program (is being) designed to hook the function called `NtCreateFile()` imported from `ntdll.dll` or equivalent to inject and perform my own code which doesn't relate to
+So basically this program (is being) designed to hook the function called `CreateFileW()` imported from `KERNEL32.dll` or equivalent to inject and perform my own code which doesn't relate to
 the original functionallity.
 
-# Definition of NtCreateFile
+# Definition of CreateFileW
 
-Quoted from: [Microsoft Docs](https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntcreatefile)
+Quoted from: [Microsoft Docs](https://docs.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew)
 
 ```cpp
-__kernel_entry NTSYSCALLAPI NTSTATUS NtCreateFile(
-  PHANDLE            FileHandle,
-  ACCESS_MASK        DesiredAccess,
-  POBJECT_ATTRIBUTES ObjectAttributes,
-  PIO_STATUS_BLOCK   IoStatusBlock,
-  PLARGE_INTEGER     AllocationSize,
-  ULONG              FileAttributes,
-  ULONG              ShareAccess,
-  ULONG              CreateDisposition,
-  ULONG              CreateOptions,
-  PVOID              EaBuffer,
-  ULONG              EaLength
+HANDLE CreateFileW(
+  LPCWSTR               lpFileName,
+  DWORD                 dwDesiredAccess,
+  DWORD                 dwShareMode,
+  LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+  DWORD                 dwCreationDisposition,
+  DWORD                 dwFlagsAndAttributes,
+  HANDLE                hTemplateFile
 );
 ```
 
