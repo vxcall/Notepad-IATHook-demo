@@ -4,4 +4,4 @@ set(CMAKE_CXX_STANDARD 17)
 
 file(GLOB_RECURSE MAIN ${CMAKE_CURRENT_SOURCE_DIR}/Notepad-IATHook-demo/*.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Notepad-IATHook-demo/*.h)
 
-add_executable(${PROJECT_NAME} ${MAIN})
+add_library(${PROJECT_NAME} SHARED ${MAIN})
