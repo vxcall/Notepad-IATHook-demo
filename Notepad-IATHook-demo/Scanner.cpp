@@ -50,10 +50,10 @@ auto Scanner::FindTargetIATEntry(const char* moduleName) -> void
 				{
 					found = true;
 					this->targetIATEntry = i + reinterpret_cast<void**>(dosBase + pImportDescriptor->FirstThunk);
-					std::cout << funcInfo->Name << std::endl;
+					//std::cout << funcInfo->Name << std::endl;
 				}
 			}
-			FindTargetIATEntry(dllName);
+			//FindTargetIATEntry(dllName);
 		}
 	}
 }

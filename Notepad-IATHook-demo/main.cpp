@@ -18,7 +18,7 @@ auto WINAPI hkCreateFileW(
 	DWORD dwFlagsAndAttributes,
 	HANDLE hTemplateFile) -> HANDLE
 {
-	MessageBox(NULL, "Function has been hooked", "RESULT", MB_OK);
+	MessageBox(NULL, "CreateFileW function has been hooked", "RESULT", MB_OK);
 	return OriginalCreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 
@@ -26,11 +26,7 @@ auto HookIATEntry(void* hkfunction) -> void;
 
 auto WINAPI hMain(LPVOID hModule) -> DWORD
 {
-	AllocConsole();
-	freopen_s(reinterpret_cast<FILE**>(stdout), "CONOUT$", "w", stdout);
 	HookIATEntry((void*)hkCreateFileW);
-	fclose(stdout);
-	FreeConsole();
 	return TRUE;
 }
 
@@ -41,7 +37,6 @@ auto HookIATEntry(void* hkfunction) -> void
 
 	if (*scanner.targetIATEntry == hkfunction)
 	{
-		std::cout << "same" << std::endl;
 		return;
 	}
 

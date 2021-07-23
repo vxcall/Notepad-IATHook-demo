@@ -2,10 +2,7 @@
 
 This is a demo of Import address table hooking tested with Notepad.
 
-I'm still working on it so it doesn't work as it finally should do.
-
-So basically this program (is being) designed to hook the function called `CreateFileW()` imported from `KERNEL32.dll` or equivalent to inject and perform my own code which doesn't relate to
-the original functionallity.
+So basically this program (is being) designed to hook the function called `CreateFileW()` imported from `KERNEL32.dll` or an equivalent to inject and perform my own code which doesn't relate to the original functionallity.
 
 # Definition of CreateFileW
 
@@ -22,6 +19,15 @@ HANDLE CreateFileW(
   HANDLE                hTemplateFile
 );
 ```
+
+# How to run this
+
+Build this project.
+Open notepad.exe and inject the generated dll and click "save as...".
+And BOOOM! A messagebox saying "CreateFileW function has been hooked" will pop up!
+
+Needless to say anything other than messagebox would work if you code so.
+
 
 # What makes me do this?
 
