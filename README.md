@@ -21,15 +21,15 @@ HANDLE CreateFileW(
 );
 ```
 
-# How to run this
+# How to perform this
 
 Build this project.
 Open notepad.exe and inject the generated dll and click "save as...".
-And BOOOM! A messagebox saying "CreateFileW function has been hooked" will pop up!
+And BOOOM! A messagebox saying "CreateFileW function has been hooked" pops up!
 
 Needless to say anything other than messagebox would work if you code so.
 
 
-# What makes me do this?
+# What makes me made this?
 
 Because why not? Hooking is beautiful.
