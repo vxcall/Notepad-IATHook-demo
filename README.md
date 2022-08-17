@@ -1,4 +1,3 @@
-![header](https://user-images.githubusercontent.com/33578715/127169129-80aa53f8-3f54-4549-80b5-e2c19bfaa790.PNG)
 # Notepad-IATHook-demo
 
 This is a demo of Import address table hooking tested with Notepad.
